@@ -36,42 +36,64 @@
  * @constructor
  */
 // only if Google Maps API included
-if (!!window.google && !! google.maps) { 
-function MultiGeometry(multiGeometryOptions) {
-   function createPolyline(polylineOptions, mg) {
-     var polyline = new google.maps.Polyline(polylineOptions);
-     google.maps.event.addListener(polyline,'click', function(evt) { google.maps.event.trigger(mg,'click',evt);});
-     google.maps.event.addListener(polyline,'dblclick', function(evt) { google.maps.event.trigger(mg, 'dblclick', evt);});
-     google.maps.event.addListener(polyline,'mousedown', function(evt) { google.maps.event.trigger(mg, 'mousedown', evt);});
-     google.maps.event.addListener(polyline,'mousemove', function(evt) { google.maps.event.trigger(mg, 'mousemove', evt);});
-     google.maps.event.addListener(polyline,'mouseout', function(evt) { google.maps.event.trigger(mg, 'mouseout', evt);});
-     google.maps.event.addListener(polyline,'mouseover', function(evt) { google.maps.event.trigger(mg, 'mouseover', evt);});
-     google.maps.event.addListener(polyline,'mouseup', function(evt) { google.maps.event.trigger(mg, 'mouseup', evt);});
-     google.maps.event.addListener(polyline,'rightclick', function(evt) { google.maps.event.trigger(mg, 'rightclick', evt);});
-     return polyline;
-   }
-   this.setValues(multiGeometryOptions);
-   this.polylines = [];
+if (!!window.google && !!google.maps) {
+  function MultiGeometry(multiGeometryOptions) {
+    function createPolyline(polylineOptions, mg) {
+      var polyline = new google.maps.Polyline(polylineOptions);
+      google.maps.event.addListener(polyline, 'click', function (evt) {
+        google.maps.event.trigger(mg, 'click', evt);
+      });
+      google.maps.event.addListener(polyline, 'dblclick', function (evt) {
+        google.maps.event.trigger(mg, 'dblclick', evt);
+      });
+      google.maps.event.addListener(polyline, 'mousedown', function (evt) {
+        google.maps.event.trigger(mg, 'mousedown', evt);
+      });
+      google.maps.event.addListener(polyline, 'mousemove', function (evt) {
+        google.maps.event.trigger(mg, 'mousemove', evt);
+      });
+      google.maps.event.addListener(polyline, 'mouseout', function (evt) {
+        google.maps.event.trigger(mg, 'mouseout', evt);
+      });
+      google.maps.event.addListener(polyline, 'mouseover', function (evt) {
+        google.maps.event.trigger(mg, 'mouseover', evt);
+      });
+      google.maps.event.addListener(polyline, 'mouseup', function (evt) {
+        google.maps.event.trigger(mg, 'mouseup', evt);
+      });
+      google.maps.event.addListener(polyline, 'rightclick', function (evt) {
+        google.maps.event.trigger(mg, 'rightclick', evt);
+      });
+      return polyline;
+    }
 
-   for (i=0; i<this.paths.length;i++) {
-     var polylineOptions = multiGeometryOptions;
-     polylineOptions.path = this.paths[i];
-     var polyline = createPolyline(polylineOptions,this);
-     // Bind the polyline properties to the MultiGeometry properties
-     this.polylines.push(polyline);
-   }
-}
-MultiGeometry.prototype = new google.maps.MVCObject();
-MultiGeometry.prototype.changed = function(key) {
+    this.setValues(multiGeometryOptions);
+    this.polylines = [];
+
+    for (i = 0; i < this.paths.length; i++) {
+      var polylineOptions = multiGeometryOptions;
+      polylineOptions.path = this.paths[i];
+      var polyline = createPolyline(polylineOptions, this);
+      // Bind the polyline properties to the MultiGeometry properties
+      this.polylines.push(polyline);
+    }
+  }
+
+  MultiGeometry.prototype = new google.maps.MVCObject();
+  MultiGeometry.prototype.changed = function (key) {
     // alert(key+" changed");
     if (this.polylines) {
-	for (var i=0; i<this.polylines.length; i++) {
-	    this.polylines[i].set(key,this.get(key));
-	}
+      for (var i = 0; i < this.polylines.length; i++) {
+        this.polylines[i].set(key, this.get(key));
+      }
     }
-};
-MultiGeometry.prototype.setMap = function(map) { this.set('map',map); };
-MultiGeometry.prototype.getMap = function() { return this.get('map'); };
+  };
+  MultiGeometry.prototype.setMap = function (map) {
+    this.set('map', map);
+  };
+  MultiGeometry.prototype.getMap = function () {
+    return this.get('map');
+  };
 }
 
 // Extend the global String object with a method to remove leading and trailing whitespace
@@ -103,8 +125,8 @@ geoXML3 = window.geoXML3 || {instances: []};
  * @param {geoXML3.parserOptions} options
  */
 geoXML3.parser = function (options) {
-  // Inherit from Google MVC Object to include event handling   
-  google.maps.MVCObject.call(this);   
+  // Inherit from Google MVC Object to include event handling
+  google.maps.MVCObject.call(this);
 
   // Private variables
   var parserOptions = new geoXML3.parserOptions(options);
@@ -128,7 +150,7 @@ geoXML3.parser = function (options) {
     thisDoc = new Object();
     thisDoc.internals = internals;
     internals.docSet.push(thisDoc);
-    render(geoXML3.xmlParse(kmlString),thisDoc);
+    render(geoXML3.xmlParse(kmlString), thisDoc);
   }
 
   var parse = function (urls, docSet) {
@@ -136,12 +158,13 @@ geoXML3.parser = function (options) {
     if (!parserName) {
       parserName = 'geoXML3.instances[' + (geoXML3.instances.push(this) - 1) + ']';
     }
-
     if (typeof urls === 'string') {
       // Single KML document
       urls = [urls];
     }
-
+    if (urls instanceof Blob) {
+      urls = [urls];
+    }
     // Internal values for the set of documents as a whole
     var internals = {
       parser: this,
@@ -151,7 +174,15 @@ geoXML3.parser = function (options) {
     };
     var thisDoc, j;
     for (var i = 0; i < urls.length; i++) {
-      var baseUrl = cleanURL(defileURL(location.pathname), urls[i]);
+      var mimeType = null, blobUrl = null;
+      if (urls[i] instanceof Blob) {
+        mimeType = urls[i].type;
+        blobUrl = URL.createObjectURL(urls[i]);
+      } else {
+        blobUrl = urls[i];
+      }
+
+      var baseUrl = cleanURL(defileURL(location.pathname), blobUrl);
       if (docsByUrl[baseUrl]) {
         // Reloading an existing document
         thisDoc = docsByUrl[baseUrl];
@@ -162,7 +193,8 @@ geoXML3.parser = function (options) {
         thisDoc.baseUrl = baseUrl;
         internals.docSet.push(thisDoc);
       }
-      thisDoc.url       = urls[i];
+      thisDoc.type = mimeType;
+      thisDoc.url = blobUrl;
       thisDoc.internals = internals;
       fetchDoc(thisDoc.url, thisDoc);
     }
@@ -173,7 +205,7 @@ geoXML3.parser = function (options) {
       render(responseXML, doc);
     };
 
-    if (typeof ZipFile === 'function' && typeof JSIO === 'object' && typeof JSIO.guessFileType === 'function') {  // KMZ support requires these modules loaded
+    if (doc.type !== 'application/vnd.google-earth.kml+xml' && typeof ZipFile === 'function' && typeof JSIO === 'object' && typeof JSIO.guessFileType === 'function') {  // KMZ support requires these modules loaded
       contentType = JSIO.guessFileType(doc.baseUrl);
       if (contentType == JSIO.FileType.Binary || contentType == JSIO.FileType.Unknown) {
         doc.isCompressed = true;
@@ -644,7 +676,7 @@ geoXML3.parser = function (options) {
         var GeometryNodes = getElementsByTagName(node, 'coordinates');
         var Geometry = null;
         if (!!GeometryNodes && (GeometryNodes.length > 0)) {
-          for (var gn=0;gn<GeometryNodes.length;gn++) {
+          for (var gn = 0; gn < GeometryNodes.length; gn++) {
             if (GeometryNodes[gn].parentNode &&
                 GeometryNodes[gn].parentNode.nodeName) {
               var GeometryPN = GeometryNodes[gn].parentNode;
@@ -710,10 +742,10 @@ geoXML3.parser = function (options) {
               doc.markers = doc.markers || [];
               if (doc.reload) {
                 for (var j = 0; j < doc.markers.length; j++) {
-                    if ((doc.markers[j].id == placemark.id) ||
-			// if no id, check position
-                        (!doc.markers[j].id && 
-                         (doc.markers[j].getPosition().equals(placemark.latlng)))) {
+                  if ((doc.markers[j].id == placemark.id) ||
+                        // if no id, check position
+                      (!doc.markers[j].id &&
+                      (doc.markers[j].getPosition().equals(placemark.latlng)))) {
                     found = doc.markers[j].active = true;
                     break;
                   }
@@ -756,7 +788,7 @@ geoXML3.parser = function (options) {
       } // placemark loop
 
       if (!!doc.reload && !!doc.markers) {
-        for (i = doc.markers.length - 1; i >= 0 ; i--) {
+        for (i = doc.markers.length - 1; i >= 0; i--) {
           if (!doc.markers[i].active) {
             if (!!doc.markers[i].infoWindow) {
               doc.markers[i].infoWindow.close();
@@ -802,8 +834,8 @@ geoXML3.parser = function (options) {
         if (!!google.maps) {
           doc.bounds = doc.bounds || new google.maps.LatLngBounds();
           doc.bounds.union(new google.maps.LatLngBounds(
-            new google.maps.LatLng(groundOverlay.latLonBox.south, groundOverlay.latLonBox.west),
-            new google.maps.LatLng(groundOverlay.latLonBox.north, groundOverlay.latLonBox.east)
+              new google.maps.LatLng(groundOverlay.latLonBox.south, groundOverlay.latLonBox.west),
+              new google.maps.LatLng(groundOverlay.latLonBox.north, groundOverlay.latLonBox.east)
           ));
         }
 
@@ -962,19 +994,19 @@ geoXML3.parser = function (options) {
     var kmlColor = {};
     kmlIn = kmlIn || 'ffffffff';  // white (KML 2.2 default)
 
-    var aa = kmlIn.substr(0,2);
-    var bb = kmlIn.substr(2,2);
-    var gg = kmlIn.substr(4,2);
-    var rr = kmlIn.substr(6,2);
+    var aa = kmlIn.substr(0, 2);
+    var bb = kmlIn.substr(2, 2);
+    var gg = kmlIn.substr(4, 2);
+    var rr = kmlIn.substr(6, 2);
 
     kmlColor.opacity = parseInt(aa, 16) / 256;
-    kmlColor.color   = (colorMode === 'random') ? randomColor(rr, gg, bb) : '#' + rr + gg + bb;
+    kmlColor.color = (colorMode === 'random') ? randomColor(rr, gg, bb) : '#' + rr + gg + bb;
     return kmlColor;
   };
 
   // Implemented per KML 2.2 <ColorStyle> specs
-  var randomColor = function(rr, gg, bb) {
-    var col = { rr: rr, gg: gg, bb: bb };
+  var randomColor = function (rr, gg, bb) {
+    var col = {rr: rr, gg: gg, bb: bb};
     for (var k in col) {
       var v = col[k];
       if (v == null) v = 'ff';
@@ -1145,10 +1177,10 @@ geoXML3.parser = function (options) {
 
     // Load basic marker properties
     var markerOptions = geoXML3.combineOptions(parserOptions.markerOptions, {
-      map:      parserOptions.map,
+      map: parserOptions.map,
       position: new google.maps.LatLng(placemark.Point.coordinates[0].lat, placemark.Point.coordinates[0].lng),
-      title:    placemark.name,
-      zIndex:   Math.round(placemark.Point.coordinates[0].lat * -100000)<<5,
+      title: placemark.name,
+      zIndex: Math.round(placemark.Point.coordinates[0].lat * -100000) << 5,
       icon: icon.marker,
       shadow: icon.shadow,
       flat: !icon.shadow,
@@ -1176,7 +1208,7 @@ geoXML3.parser = function (options) {
         new google.maps.LatLng(groundOverlay.latLonBox.south, groundOverlay.latLonBox.west),
         new google.maps.LatLng(groundOverlay.latLonBox.north, groundOverlay.latLonBox.east)
     );
-    var overlayOptions = geoXML3.combineOptions(parserOptions.overlayOptions, {percentOpacity: groundOverlay.opacity*100});
+    var overlayOptions = geoXML3.combineOptions(parserOptions.overlayOptions, {percentOpacity: groundOverlay.opacity * 100});
     var overlay = new ProjectedOverlay(parserOptions.map, groundOverlay.icon.href, bounds, overlayOptions);
 
     if (!!doc) {
@@ -1194,7 +1226,7 @@ geoXML3.parser = function (options) {
     for (var j = 0; j < placemark.LineString.length; j++) {
       var path = [];
       var coords = placemark.LineString[j].coordinates;
-      for (var i=0;i<coords.length;i++) {
+      for (var i = 0; i < coords.length; i++) {
         var pt = new google.maps.LatLng(coords[i].lat, coords[i].lng);
         path.push(pt);
         bounds.extend(pt);
@@ -1295,7 +1327,7 @@ geoXML3.parser = function (options) {
 
     if (!placemark.balloonVisibility || bStyle.displayMode === 'hide') return;
 
-    // define geDirections 
+    // define geDirections
     if (placemark.latlng &&
         (!parserOptions.suppressDirections || !parserOptions.suppressDirections)) {
       vars.directions.push('sll=' + placemark.latlng.toUrlValue());
@@ -1364,16 +1396,16 @@ geoXML3.parser = function (options) {
     docsByUrl: docsByUrl,
     kmzMetaData: kmzMetaData,
 
-    parse:          parse,
-    render:         render,
+    parse: parse,
+    render: render,
     parseKmlString: parseKmlString,
-    hideDocument:   hideDocument,
-    showDocument:   showDocument,
+    hideDocument: hideDocument,
+    showDocument: showDocument,
     processStyles: processStyles,
-    createMarker:   createMarker,
-    createOverlay:  createOverlay,
+    createMarker: createMarker,
+    createOverlay: createOverlay,
     createPolyline: createPolyline,
-    createPolygon:  createPolygon
+    createPolygon: createPolygon
   };
 };
 // End of KML Parser
@@ -1392,10 +1424,12 @@ geoXML3.getOpacity = function (kmlColor) {
 };
 
 // Log a message to the debugging console, if one exists
-geoXML3.log = function(msg) {
+geoXML3.log = function (msg) {
   if (!!window.console) {
     console.log(msg);
-  } else { alert("log:"+msg); }
+  } else {
+    alert("log:" + msg);
+  }
 };
 
 /**
@@ -1532,20 +1566,20 @@ geoXML3.xmlParse = function (str) {
  * @return boolean.
  */
 // from http://stackoverflow.com/questions/11563554/how-do-i-detect-xml-parsing-errors-when-using-javascripts-domparser-in-a-cross
-geoXML3.isParseError = function(parsedDocument) {
-    if ((typeof ActiveXObject != 'undefined') || ("ActiveXObject" in window))
-	return false;
-    // parser and parsererrorNS could be cached on startup for efficiency
-    var p = new DOMParser(),
-        errorneousParse = p.parseFromString('<', 'text/xml'),
-        parsererrorNS = errorneousParse.getElementsByTagName("parsererror")[0].namespaceURI;
+geoXML3.isParseError = function (parsedDocument) {
+  if ((typeof ActiveXObject != 'undefined') || ("ActiveXObject" in window))
+    return false;
+  // parser and parsererrorNS could be cached on startup for efficiency
+  var p = new DOMParser(),
+      errorneousParse = p.parseFromString('<', 'text/xml'),
+      parsererrorNS = errorneousParse.getElementsByTagName("parsererror")[0].namespaceURI;
 
-    if (parsererrorNS === 'http://www.w3.org/1999/xhtml') {
-        // In PhantomJS the parseerror element doesn't seem to have a special namespace, so we are just guessing here :(
-        return parsedDocument.getElementsByTagName("parsererror").length > 0;
-    }
+  if (parsererrorNS === 'http://www.w3.org/1999/xhtml') {
+    // In PhantomJS the parseerror element doesn't seem to have a special namespace, so we are just guessing here :(
+    return parsedDocument.getElementsByTagName("parsererror").length > 0;
+  }
 
-    return parsedDocument.getElementsByTagNameNS(parsererrorNS, 'parsererror').length > 0;
+  return parsedDocument.getElementsByTagNameNS(parsererrorNS, 'parsererror').length > 0;
 };
 
 /**
@@ -1610,7 +1644,7 @@ geoXML3.fetchXML = function (url, callback) {
           var xml = xhrFetcher.fetcher.responseXML;
           if (xml && !xml.documentElement && !xml.ownerElement) {
             xml.loadXML(xhrFetcher.fetcher.responseText);
-        }
+          }
         } else {// handle valid xml sent with wrong MIME type
           xml = geoXML3.xmlParse(xhrFetcher.fetcher.responseText);
         }
@@ -1795,19 +1829,19 @@ geoXML3.fetchZIP = function (url, callback, parser) {
  * @param {Any} delVal Default value if the node doesn't exist.
  * @return {String|Null}
  */
-geoXML3.nodeValue = function(node, defVal) {
-  var retStr="";
+geoXML3.nodeValue = function (node, defVal) {
+  var retStr = "";
   if (!node) {
     return (typeof defVal === 'undefined' || defVal === null) ? null : defVal;
   }
-   if(node.nodeType==3||node.nodeType==4||node.nodeType==2){
-      retStr+=node.nodeValue;
-   }else if(node.nodeType==1||node.nodeType==9||node.nodeType==11){
-      for(var i=0;i<node.childNodes.length;++i){
-         retStr+=arguments.callee(node.childNodes[i]);
-      }
-   }
-   return retStr;
+  if (node.nodeType == 3 || node.nodeType == 4 || node.nodeType == 2) {
+    retStr += node.nodeValue;
+  } else if (node.nodeType == 1 || node.nodeType == 9 || node.nodeType == 11) {
+    for (var i = 0; i < node.childNodes.length; ++i) {
+      retStr += arguments.callee(node.childNodes[i]);
+    }
+  }
+  return retStr;
 };
 
 /**

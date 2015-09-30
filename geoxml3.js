@@ -618,7 +618,8 @@ geoXML3.parser = function (options) {
           styleID: styleUrl[1],
           visibility: getBooleanValue(getElementsByTagName(node, 'visibility')[0], true),
           balloonVisibility: getBooleanValue(getElementsByTagNameNS(node, gxNS, 'balloonVisibility')[0], !parserOptions.suppressInfoWindows),
-          id: node.getAttribute('id')
+          id: node.getAttribute('id'),
+          index: pm
         };
         placemark.style = (styles[placemark.styleBaseUrl] && styles[placemark.styleBaseUrl][placemark.styleID]) || clone(defaultStyle);
         // inline style overrides shared style
@@ -829,7 +830,8 @@ geoXML3.parser = function (options) {
             east: parseFloat(nodeValue(getElementsByTagName(node, 'east')[0])),
             south: parseFloat(nodeValue(getElementsByTagName(node, 'south')[0])),
             west: parseFloat(nodeValue(getElementsByTagName(node, 'west')[0]))
-          }
+          },
+          index: i
         };
         if (!!google.maps) {
           doc.bounds = doc.bounds || new google.maps.LatLngBounds();
@@ -1208,14 +1210,19 @@ geoXML3.parser = function (options) {
         new google.maps.LatLng(groundOverlay.latLonBox.south, groundOverlay.latLonBox.west),
         new google.maps.LatLng(groundOverlay.latLonBox.north, groundOverlay.latLonBox.east)
     );
-    var overlayOptions = geoXML3.combineOptions(parserOptions.overlayOptions, {percentOpacity: groundOverlay.opacity * 100});
+    var overlayOptions = geoXML3.combineOptions(parserOptions.overlayOptions, {
+      percentOpacity: groundOverlay.opacity * 100,
+      index: groundOverlay.index
+    });
     var overlay = new ProjectedOverlay(parserOptions.map, groundOverlay.icon.href, bounds, overlayOptions);
 
     if (!!doc) {
       doc.ggroundoverlays = doc.ggroundoverlays || [];
       doc.ggroundoverlays.push(overlay);
     }
-
+    if (typeof parserOptions.onAfterCreateGroundOverlay === 'function') {
+      parserOptions.onAfterCreateGroundOverlay(overlay);
+    }
     return overlay;
   };
 
@@ -1244,7 +1251,8 @@ geoXML3.parser = function (options) {
       strokeWeight: placemark.style.line.width,
       strokeOpacity: kmlStrokeColor.opacity,
       title: placemark.name,
-      visible: placemark.visibility
+      visible: placemark.visibility,
+      index: placemark.index
     });
     if (paths.length > 1) {
       polyOptions.paths = paths;
@@ -1259,6 +1267,9 @@ geoXML3.parser = function (options) {
     createInfoWindow(placemark, doc, p);
     if (!!doc) doc.gpolylines.push(p);
     placemark.polyline = p;
+    if (typeof parserOptions.onAfterCreatePolyLine === 'function') {
+      parserOptions.onAfterCreatePolyLine(p, placemark);
+    }
     return p;
   }
 
@@ -1310,7 +1321,8 @@ geoXML3.parser = function (options) {
       strokeOpacity: kmlStrokeColor.opacity,
       fillColor: kmlFillColor.color,
       fillOpacity: kmlFillColor.opacity,
-      visible: placemark.visibility
+      visible: placemark.visibility,
+      index: placemark.index
     });
     var p = new google.maps.Polygon(polyOptions);
     p.bounds = bounds;
@@ -1318,6 +1330,9 @@ geoXML3.parser = function (options) {
     createInfoWindow(placemark, doc, p);
     if (!!doc) doc.gpolygons.push(p);
     placemark.polygon = p;
+    if (typeof parserOptions.onAfterCreatePolygon === 'function') {
+      parserOptions.onAfterCreatePolygon(p, placemark);
+    }
     return p;
   }
 
@@ -1357,10 +1372,14 @@ geoXML3.parser = function (options) {
     });
 
     gObj.infoWindow = parserOptions.infoWindow || new google.maps.InfoWindow(infoWindowOptions);
+    delete infoWindowOptions.content;
     gObj.infoWindowOptions = infoWindowOptions;
 
     // Info Window-opening event handler
     google.maps.event.addListener(gObj, 'click', function (e) {
+      if (typeof this.infoWindow.$onOpen === 'function') {
+        this.infoWindow.$onOpen(gObj);
+      }
       var iW = this.infoWindow;
       iW.close();
       iW.setOptions(this.infoWindowOptions);
@@ -1368,20 +1387,20 @@ geoXML3.parser = function (options) {
       if (e && e.latLng) iW.setPosition(e.latLng);
       else if (this.bounds)   iW.setPosition(this.bounds.getCenter());
 
-      iW.setContent("<div id='geoxml3_infowindow'>" + iW.getContent() + "</div>");
+      //iW.setContent("<div id='geoxml3_infowindow'>" + iW.getContent() + "</div>");
       google.maps.event.addListenerOnce(iW, "domready", function () {
-        var node = document.getElementById('geoxml3_infowindow');
-        var imgArray = node.getElementsByTagName('img');
-        for (var i = 0; i < imgArray.length; i++) {
-          var imgUrlIE = imgArray[i].getAttribute("src");
-          var imgUrl = cleanURL(doc.baseDir, imgUrlIE);
+        /*var node = document.getElementById('geoxml3_infowindow');
+         var imgArray = node.getElementsByTagName('img');
+         for (var i = 0; i < imgArray.length; i++) {
+         var imgUrlIE = imgArray[i].getAttribute("src");
+         var imgUrl = cleanURL(doc.baseDir, imgUrlIE);
 
-          if (kmzMetaData[imgUrl]) {
-            imgArray[i].src = kmzMetaData[imgUrl].dataUrl;
-          } else if (kmzMetaData[imgUrlIE]) {
-            imgArray[i].src = kmzMetaData[imgUrlIE].dataUrl;
-          }
-        }
+         if (kmzMetaData[imgUrl]) {
+         imgArray[i].src = kmzMetaData[imgUrl].dataUrl;
+         } else if (kmzMetaData[imgUrlIE]) {
+         imgArray[i].src = kmzMetaData[imgUrlIE].dataUrl;
+         }
+         }*/
       });
       iW.open(this.map, this.bounds ? null : this);
     });

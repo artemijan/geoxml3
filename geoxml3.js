@@ -207,6 +207,7 @@ geoXML3.parser = function (options) {
 
     if (doc.type !== 'application/vnd.google-earth.kml+xml' && typeof ZipFile === 'function' && typeof JSIO === 'object' && typeof JSIO.guessFileType === 'function') {  // KMZ support requires these modules loaded
       contentType = JSIO.guessFileType(doc.baseUrl);
+      contentType === 3 ? contentType = JSIO.FileType.Binary : null;
       if (contentType == JSIO.FileType.Binary || contentType == JSIO.FileType.Unknown) {
         doc.isCompressed = true;
         doc.baseDir = doc.baseUrl + '/';

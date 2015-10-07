@@ -1,0 +1,29 @@
+{
+  "name": "geoxml3",
+  "version": "0.1.0",
+  "description": "Geo xml library",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/artemijan/logicify-gmap.git"
+  },
+  "main": "geoxml3.js",
+  "homepage": "https://code.google.com/p/geoxml/",
+  "author": "Google inc.",
+  "license": "GNU Lesser GPL",
+  "keywords": [
+    "geoxml",
+    "google",
+    "gmap",
+    "maps",
+    "overlays",
+    "kml",
+    "javascript",
+    "kmz"
+  ],
+  "licenses": [
+    {
+      "type": "GNU Lesser GPL",
+      "url": "http://www.gnu.org/licenses/lgpl.html"
+    }
+  ]
+}

@@ -3,3 +3,20 @@
 # Support
 kmz\kml support (master branch)
 Parser can handle not event links but bufferarrays (taken from http response or from ```<input> ``` for example)
+## Other stuffs:
+#### parserOptions extended with those callbacks:
+```js
+onAfterCreateGroundOverlay = function (overlay){}
+```
+
+```js
+onAfterCreatePolyLine = function (polyLineGoogleMVCObject,placemark){}
+```
+
+```js
+onAfterCreatePolygon = function (polygonGoogleMVCObject,placemark){}
+```
+##### you can create infowindow in your code and pass it to parserOptions
+```js
+parserOptions.infowindow = new Infowindow();
+```

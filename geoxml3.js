@@ -36,6 +36,7 @@
  * @constructor
  */
 // only if Google Maps API included
+/*global google*/
 if (!!window.google && !!google.maps) {
   function MultiGeometry(multiGeometryOptions) {
     function createPolyline(polylineOptions, mg) {
@@ -151,7 +152,7 @@ geoXML3.parser = function (options) {
     thisDoc.internals = internals;
     internals.docSet.push(thisDoc);
     render(geoXML3.xmlParse(kmlString), thisDoc);
-  }
+  };
 
   var parse = function (urls, docSet) {
     // Process one or more KML documents
@@ -207,7 +208,6 @@ geoXML3.parser = function (options) {
 
     if (doc.type !== 'application/vnd.google-earth.kml+xml' && typeof ZipFile === 'function' && typeof JSIO === 'object' && typeof JSIO.guessFileType === 'function') {  // KMZ support requires these modules loaded
       contentType = JSIO.guessFileType(doc.baseUrl);
-      contentType === 3 ? contentType = JSIO.FileType.Binary : null;
       if (contentType == JSIO.FileType.Binary || contentType == JSIO.FileType.Unknown) {
         doc.isCompressed = true;
         doc.baseDir = doc.baseUrl + '/';

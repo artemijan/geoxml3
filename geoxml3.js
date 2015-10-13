@@ -1378,9 +1378,6 @@ geoXML3.parser = function (options) {
 
     // Info Window-opening event handler
     google.maps.event.addListener(gObj, 'click', function (e) {
-      if (typeof this.infoWindow.$onOpen === 'function') {
-        this.infoWindow.$onOpen(gObj);
-      }
       var iW = this.infoWindow;
       iW.close();
       iW.setOptions(this.infoWindowOptions);
@@ -1404,6 +1401,9 @@ geoXML3.parser = function (options) {
          }*/
       });
       iW.open(this.map, this.bounds ? null : this);
+      if (typeof this.infoWindow.$onOpen === 'function') {
+        this.infoWindow.$onOpen(gObj);
+      }
     });
 
   }

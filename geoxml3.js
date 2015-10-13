@@ -503,7 +503,7 @@ geoXML3.parser = function (options) {
         if (!responseXML || responseXML == "failed parse") {
             // Error retrieving the data
             geoXML3.log('Unable to retrieve ' + doc.url);
-            if (parserOptions.failedParse) parserOptions.failedParse(doc);
+            if (parserOptions.failedParse) parserOptions.failedParse(doc, promise);
             doc.failed = true;
             return;
         } else if (responseXML.parseError && responseXML.parseError.errorCode != 0) {
@@ -514,13 +514,13 @@ geoXML3.parser = function (options) {
                 'Error Line: ' + err.srcText;
 
             geoXML3.log('Unable to retrieve ' + doc.url + ': ' + msg);
-            if (parserOptions.failedParse) parserOptions.failedParse(doc);
+            if (parserOptions.failedParse) parserOptions.failedParse(doc, promise);
             doc.failed = true;
             return;
         } else if (responseXML.documentElement && responseXML.documentElement.nodeName == 'parsererror') {
             // Firefox parse error
             geoXML3.log('Unable to retrieve ' + doc.url + ': ' + responseXML.documentElement.childNodes[0].nodeValue);
-            if (parserOptions.failedParse) parserOptions.failedParse(doc);
+            if (parserOptions.failedParse) parserOptions.failedParse(doc, promise);
             doc.failed = true;
             return;
         } else if (!doc) {
